@@ -14,4 +14,4 @@ setup(
     url='https://github.com/smashwilson/swiftest',
     packages=['swiftest'],
     install_requires='requests>=1.2.3',
-    test_requires='nose')
+    test_requires='httpretty>=0.6.3')
