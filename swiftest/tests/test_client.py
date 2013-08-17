@@ -5,7 +5,7 @@ Unit tests for the Client class.
 import unittest
 import httpretty
 
-from swiftest.client import Client
+from swiftest.client import Client, AuthenticationError
 
 class TestClient(unittest.TestCase):
 
@@ -30,6 +30,20 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(client.auth_token, '12345abcdef')
         self.assertEqual(client.storage_url, 'http://storage.endpoint.com/v1/')
+
+    def test_authentication_failure(self):
+        """
+        Raise an exception if authentication fails.
+        """
+
+        httpretty.register_uri(httpretty.GET, 'http://auth.endpoint.com/v1/', status=401)
+
+        try:
+            Client(endpoint='http://auth.endpoint.com/v1/',
+                username='me', auth_key='bad')
+            self.fail('Did not raise an error with bad credentials')
+        except AuthenticationError:
+            pass
 
     def tearDown(self):
         httpretty.disable()

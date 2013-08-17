@@ -9,6 +9,3 @@ __all__ = ['VERSION']
 # MINOR: Incremented when the public API has backwards-compatible changes.
 # PATCH: Incremented for internal bugfixes.
 VERSION='1.0.0'
-
-# Export Client, the primary entry point into swiftest.
-from client import Client
