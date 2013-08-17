@@ -1,0 +1,4 @@
+*.pyc
+swiftest.egg-info/
+build/
+dist/
