@@ -33,3 +33,17 @@ class Client:
         """
 
         return Account(self)
+
+    def _call(self, method, path, **kwargs):
+        """
+        Perform an HTTP request against the storage endpoint.
+
+        Always include the auth token as a header and add "path" to the storage_url.
+        """
+        extra = kwargs
+        if 'headers' in extra:
+            extra['headers']['X-Auth-Token'] = self.auth_token
+        else:
+            extra['headers'] = {'X-Auth-Token': self.auth_token}
+        r = method(client.storage_url + path, **extra)
+        r.raise_for_status()

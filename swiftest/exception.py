@@ -17,9 +17,3 @@ class ProtocolError(SwiftestError):
     headers are missing from HTTP responses.
     """
     pass
-
-class AuthenticationError(SwiftestError):
-    """
-    Raised when authentication fails or an auth token is rejected.
-    """
-    pass
