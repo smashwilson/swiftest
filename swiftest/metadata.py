@@ -10,8 +10,8 @@ class Metadata(dict):
     def __init__(self, parent, existing):
         dict.__init__(self, existing)
         self.parent = parent
-        self.updates = []
-        self.deletions = []
+        self.updates = set()
+        self.deletions = set()
 
     def save(self):
         """
@@ -24,9 +24,23 @@ class Metadata(dict):
         Record the addition or update of a value.
         """
 
-        if key not in self or self[key] != value:
-            self.updates.append(key)
-        dict.__setitem__(self, key, value)
+        lkey = key.lower()
+        if lkey not in self or self[lkey] != value:
+            self.updates.add(lkey)
+        if value and lkey in self.deletions:
+            self.deletions.remove(lkey)
+        dict.__setitem__(self, lkey, value)
+
+    def __delitem__(self, key):
+        """
+        Record the deletion of a value.
+        """
+
+        lkey = key.lower()
+        dict.__delitem__(self, lkey)
+        self.deletions.add(lkey)
+        if key in self.updates:
+            self.updates.remove(lkey)
 
     @classmethod
     def from_response(cls, parent, response, prefix):

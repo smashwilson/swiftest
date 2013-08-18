@@ -75,5 +75,22 @@ class TestAccount(unittest.TestCase):
         self.assertEqual('some-value', headers['X-Account-Meta-Foo'])
         self.assertEqual('another-value', headers['X-Account-Meta-Bar'])
 
+    def test_delete_metadata(self):
+        """
+        Account metadata can be deleted by manipulating the metadata property.
+        """
+
+        httpretty.register_uri(HEAD, util.STORAGE_URL, status=200,
+            x_account_container_count=0, x_account_bytes_used=0,
+            x_account_meta_one='something')
+        httpretty.register_uri(POST, util.STORAGE_URL, status=200)
+
+        a = Account(self.client)
+        del a.metadata['one']
+        a.metadata.save()
+
+        headers = httpretty.last_request().headers
+        self.assertEqual('', headers['X-Account-Meta-One'])
+
     def tearDown(self):
         httpretty.disable()

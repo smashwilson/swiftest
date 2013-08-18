@@ -34,4 +34,6 @@ class Account:
         h = {}
         for update in metadata.updates:
             h["X-Account-Meta-" + update] = metadata[update]
+        for deletion in metadata.deletions:
+            h["X-Account-Meta-" + deletion] = ''
         self.client._call(requests.post, '', headers=h)
