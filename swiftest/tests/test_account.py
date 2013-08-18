@@ -5,8 +5,8 @@ Unit tests for the Account class.
 import unittest
 import httpretty
 import requests
-from mock import MagicMock
 
+from swiftest.client import Client
 from swiftest.account import Account
 
 class TestAccount(unittest.TestCase):
@@ -14,12 +14,19 @@ class TestAccount(unittest.TestCase):
     def setUp(self):
         httpretty.enable()
 
-        self.client = MagicMock(name='Client')
-        self.client.auth_token = '12345'
-        self.client.storage_url = 'http://storage.example.com/v1/account'
+        # Mock the authentication endpoint to create a real Client.
+        httpretty.register_uri(httpretty.GET, 'http://auth.endpoint.com/v1/', status=204,
+            x_auth_token='12345abcdef',
+            x_storage_url='http://storage.endpoint.com/v1/account')
+
+        self.client = Client(endpoint='http://auth.endpoint.com/v1/',
+            username='me', auth_key='swordfish')
 
     def test_account_metadata(self):
-        httpretty.register_uri(httpretty.HEAD, 'http://storage.example.com/v1/account', status=204,
+        """
+        Creating an Account reads metadata from HTTP headers.
+        """
+        httpretty.register_uri(httpretty.HEAD, 'http://storage.endpoint.com/v1/account', status=204,
             x_account_container_count=123, x_account_bytes_used=102400)
 
         a = Account(self.client)
@@ -27,7 +34,11 @@ class TestAccount(unittest.TestCase):
         self.assertEquals(102400, a.bytes_used)
 
     def test_account_auth_failure(self):
-        httpretty.register_uri(httpretty.HEAD, 'http://storage.example.com/v1/account', status=401)
+        """
+        An error is raised if the token is rejected.
+        """
+
+        httpretty.register_uri(httpretty.HEAD, 'http://storage.endpoint.com/v1/account', status=401)
 
         try:
             Account(self.client)

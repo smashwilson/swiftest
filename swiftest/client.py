@@ -1,6 +1,7 @@
 import requests
 
 from .exception import ProtocolError
+from .account import Account
 
 class Client:
     """
@@ -40,10 +41,12 @@ class Client:
 
         Always include the auth token as a header and add "path" to the storage_url.
         """
+
         extra = kwargs
         if 'headers' in extra:
             extra['headers']['X-Auth-Token'] = self.auth_token
         else:
             extra['headers'] = {'X-Auth-Token': self.auth_token}
-        r = method(client.storage_url + path, **extra)
+        r = method(self.storage_url + path, **extra)
         r.raise_for_status()
+        return r
