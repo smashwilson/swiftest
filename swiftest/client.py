@@ -21,21 +21,11 @@ class Client:
 
         auth_headers = {'X-Auth-User': username, 'X-Auth-Key': auth_key}
         auth_response = requests.get(endpoint, headers=auth_headers)
+        auth_response.raise_for_status()
 
-        if 400 <= auth_response.status_code < 500:
-            # Unauthorized.
-            raise AuthenticationError(
-                "Authentication failed for user {0}. (status: {1})".format(
-                    username, auth_response.status_code))
-        elif 200 <= auth_response.status_code < 300:
-            # Read the storage URL and auth token from the response.
-            self.storage_url = auth_response.headers['X-Storage-Url']
-            self.auth_token = auth_response.headers['X-Auth-Token']
-        else:
-            # Unknown status, possibly an internal service error.
-            raise ProtocolError(
-                "Unexpected status {0} received from authentication server.".format(
-                    auth_response.status_code))
+        # Read the storage URL and auth token from the response.
+        self.storage_url = auth_response.headers['X-Storage-Url']
+        self.auth_token = auth_response.headers['X-Auth-Token']
 
     def account(self):
         """

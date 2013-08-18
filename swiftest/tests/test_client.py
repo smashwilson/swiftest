@@ -4,9 +4,9 @@ Unit tests for the Client class.
 
 import unittest
 import httpretty
+import requests
 
 from swiftest.client import Client
-from swiftest.exception import AuthenticationError
 
 class TestClient(unittest.TestCase):
 
@@ -43,7 +43,7 @@ class TestClient(unittest.TestCase):
             Client(endpoint='http://auth.endpoint.com/v1/',
                 username='me', auth_key='bad')
             self.fail('Did not raise an error with bad credentials')
-        except AuthenticationError:
+        except requests.HTTPError:
             pass
 
     def tearDown(self):
