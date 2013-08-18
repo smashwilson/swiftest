@@ -7,6 +7,7 @@ import httpretty
 from mock import MagicMock
 
 from swiftest.account import Account
+from swiftest.exception import AuthenticationError
 
 class TestAccount(unittest.TestCase):
 
@@ -24,6 +25,15 @@ class TestAccount(unittest.TestCase):
         a = Account(self.client)
         self.assertEquals(123, a.container_count)
         self.assertEquals(102400, a.bytes_used)
+
+    def test_account_auth_failure(self):
+        httpretty.register_uri(httpretty.HEAD, 'http://storage.example.com/v1/account', status=401)
+
+        try:
+            Account(self.client)
+            self.fail('Did not fail on a rejected token.')
+        except AuthenticationError:
+            pass
 
     def tearDown(self):
         httpretty.disable()

@@ -5,7 +5,8 @@ Unit tests for the Client class.
 import unittest
 import httpretty
 
-from swiftest.client import Client, AuthenticationError
+from swiftest.client import Client
+from swiftest.exception import AuthenticationError
 
 class TestClient(unittest.TestCase):
 

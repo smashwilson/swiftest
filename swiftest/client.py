@@ -1,5 +1,7 @@
 import requests
 
+from exception import AuthenticationError, ProtocolError
+
 class Client:
     """
     The main entry point into Swiftest.
@@ -31,29 +33,13 @@ class Client:
             self.auth_token = auth_response.headers['X-Auth-Token']
         else:
             # Unknown status, possibly an internal service error.
-            raise SwiftestError(
+            raise ProtocolError(
                 "Unexpected status {0} received from authentication server.".format(
                     auth_response.status_code))
 
+    def account(self):
+        """
+        Access metadata about your account.
+        """
 
-class SwiftestError(Exception):
-    """
-    Root of the hierarchy of exceptions raised by Swiftest.
-
-    Enables bulk catching when desired.
-    """
-
-class ProtocolError(SwiftestError):
-    """
-    An unexpected state was encountered in the OpenSwift protocol.
-
-    This is raised on many 500 conditions, for example, or cases where expected
-    headers are missing from HTTP responses.
-    """
-    pass
-
-class AuthenticationError(SwiftestError):
-    """
-    Raised when authentication fails or an auth token is rejected.
-    """
-    pass
+        return Account(self)
