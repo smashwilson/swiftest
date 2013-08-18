@@ -1,6 +1,7 @@
 import requests
 
 from .exception import AuthenticationError, ProtocolError
+from .compat import to_long
 
 class Account:
     """
@@ -17,8 +18,8 @@ class Account:
 
         if 200 <= meta_response.status_code < 300:
             # Extract metadata from the response.
-            self.container_count = long(meta_response.headers['X-Account-Container-Count'])
-            self.bytes_used = long(meta_response.headers['X-Account-Bytes-Used'])
+            self.container_count = to_long(meta_response.headers['X-Account-Container-Count'])
+            self.bytes_used = to_long(meta_response.headers['X-Account-Bytes-Used'])
         elif 400 <= meta_response.status_code < 500:
             raise AuthenticationError(
                 "Auth token {0} was rejected.".format(client.auth_token))
