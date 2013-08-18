@@ -10,7 +10,7 @@ from httpretty import HEAD, POST
 from swiftest.client import Client
 from swiftest.account import Account
 
-import util
+import .util
 from .util import create_client
 
 class TestAccount(unittest.TestCase):
