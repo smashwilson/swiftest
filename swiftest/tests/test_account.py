@@ -9,18 +9,13 @@ import requests
 from swiftest.client import Client
 from swiftest.account import Account
 
+from .util import create_client
+
 class TestAccount(unittest.TestCase):
 
     def setUp(self):
         httpretty.enable()
-
-        # Mock the authentication endpoint to create a real Client.
-        httpretty.register_uri(httpretty.GET, 'http://auth.endpoint.com/v1/', status=204,
-            x_auth_token='12345abcdef',
-            x_storage_url='http://storage.endpoint.com/v1/account')
-
-        self.client = Client(endpoint='http://auth.endpoint.com/v1/',
-            username='me', auth_key='swordfish')
+        self.client = create_client()
 
     def test_account_metadata(self):
         """
