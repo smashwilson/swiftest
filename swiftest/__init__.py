@@ -1,5 +1,8 @@
 """
 Pythonic client for OpenSwift.
+
+>>> from client import Client
+>>> cli = Client(endpoint='https://identity.api.rackspacecloud.com/v1.0/', username=USER_NAME, auth_key=AUTH_KEY)
 """
 
 __all__ = ['VERSION']
@@ -9,3 +12,8 @@ __all__ = ['VERSION']
 # MINOR: Incremented when the public API has backwards-compatible changes.
 # PATCH: Incremented for internal bugfixes.
 VERSION='1.0.0'
+
+from . import account
+from . import client
+from . import exception
+from . import metadata

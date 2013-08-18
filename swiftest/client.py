@@ -20,8 +20,11 @@ class Client:
         token and storage URL.
         """
 
+        self.endpoint = endpoint
+        self.username = username
+
         auth_headers = {'X-Auth-User': username, 'X-Auth-Key': auth_key}
-        auth_response = requests.get(endpoint, headers=auth_headers)
+        auth_response = requests.get(self.endpoint, headers=auth_headers)
         auth_response.raise_for_status()
 
         # Read the storage URL and auth token from the response.
@@ -50,3 +53,8 @@ class Client:
         r = method(self.storage_url + path, **extra)
         r.raise_for_status()
         return r
+
+    def __repr__(self):
+        return "<Client(endpoint={},username={},auth_key={})>".format(self.endpoint,
+                                           self.username,
+                                           "...")
