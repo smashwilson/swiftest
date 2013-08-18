@@ -3,12 +3,14 @@ Unit tests for the Account class.
 """
 
 import unittest
-import httpretty
 import requests
+import httpretty
+from httpretty import HEAD, POST
 
 from swiftest.client import Client
 from swiftest.account import Account
 
+import util
 from .util import create_client
 
 class TestAccount(unittest.TestCase):
@@ -21,25 +23,57 @@ class TestAccount(unittest.TestCase):
         """
         Creating an Account reads metadata from HTTP headers.
         """
-        httpretty.register_uri(httpretty.HEAD, 'http://storage.endpoint.com/v1/account', status=204,
+
+        httpretty.register_uri(HEAD, util.STORAGE_URL, status=204,
             x_account_container_count=123, x_account_bytes_used=102400)
 
         a = Account(self.client)
-        self.assertEquals(123, a.container_count)
-        self.assertEquals(102400, a.bytes_used)
+        self.assertEqual(123, a.container_count)
+        self.assertEqual(102400, a.bytes_used)
 
     def test_account_auth_failure(self):
         """
         An error is raised if the token is rejected.
         """
 
-        httpretty.register_uri(httpretty.HEAD, 'http://storage.endpoint.com/v1/account', status=401)
+        httpretty.register_uri(HEAD, util.STORAGE_URL, status=401)
 
         try:
             Account(self.client)
             self.fail('Did not fail on a rejected token.')
         except requests.HTTPError:
             pass
+
+    def test_report_metadata(self):
+        """
+        The metadata property is populated with any account metadata.
+        """
+
+        httpretty.register_uri(HEAD, util.STORAGE_URL, status=204,
+            x_account_container_count=0, x_account_bytes_used=0,
+            x_account_meta_one='something', x_account_meta_two='else')
+
+        a = Account(self.client)
+        self.assertEqual('something', a.metadata['one'])
+        self.assertEqual('else', a.metadata['two'])
+
+    def test_create_metadata(self):
+        """
+        Account metadata can be added through the metadata property.
+        """
+
+        httpretty.register_uri(HEAD, util.STORAGE_URL, status=200,
+            x_account_container_count=0, x_account_bytes_used=0)
+        httpretty.register_uri(POST, util.STORAGE_URL, status=200)
+
+        a = Account(self.client)
+        a.metadata['foo'] = 'some-value'
+        a.metadata['bar'] = 'another-value'
+        a.metadata.save()
+
+        headers = httpretty.last_request().headers
+        self.assertEqual('some-value', headers['X-Account-Meta-Foo'])
+        self.assertEqual('another-value', headers['X-Account-Meta-Bar'])
 
     def tearDown(self):
         httpretty.disable()

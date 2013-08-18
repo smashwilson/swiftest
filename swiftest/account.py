@@ -1,5 +1,7 @@
+import re
 import requests
 
+from .metadata import Metadata
 from .exception import ProtocolError
 from .compat import to_long
 
@@ -21,3 +23,15 @@ class Account:
             self.bytes_used = to_long(meta_response.headers['X-Account-Bytes-Used'])
         except ValueError:
             raise ProtocolError("Non-integer received in HEAD response.")
+
+        self.metadata = Metadata.from_response(self, meta_response, 'Account')
+
+    def _commit_metadata(self, metadata):
+        """
+        Create, update or delete account metadata based on the changes made to
+        the metadata dictionary.
+        """
+        h = {}
+        for update in metadata.updates:
+            h["X-Account-Meta-" + update] = metadata[update]
+        self.client._call(requests.post, '', headers=h)
