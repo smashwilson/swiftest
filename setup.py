@@ -4,6 +4,10 @@
 from setuptools import setup
 
 import swiftest
+import os
+
+with open('requirements.txt') as f:
+    required = [line for line in f.read().splitlines() if line[0] != '#' and len(line.strip()) != 0]
 
 setup(
     name='swiftest',
@@ -13,5 +17,4 @@ setup(
     author_email='smashwilson@gmail.com',
     url='https://github.com/smashwilson/swiftest',
     packages=['swiftest'],
-    install_requires='requests>=1.2.3',
-    test_requires='httpretty>=0.6.3')
+    install_requires=required)
