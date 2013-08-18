@@ -1,6 +1,6 @@
 import requests
 
-from .exception import AuthenticationError, ProtocolError
+from .exception import ProtocolError
 
 class Client:
     """
