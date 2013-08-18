@@ -5,6 +5,7 @@ from .metadata import Metadata
 from .exception import ProtocolError
 from .compat import to_long
 
+
 class Account:
     """
     Report basic account metadata.
@@ -37,3 +38,6 @@ class Account:
         for deletion in metadata.deletions:
             h["X-Account-Meta-" + deletion] = ''
         self.client._call(requests.post, '', headers=h)
+
+    def __repr__(self):
+        return "<Account(" + repr(self.client) + ")>"
