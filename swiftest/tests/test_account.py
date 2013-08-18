@@ -4,10 +4,10 @@ Unit tests for the Account class.
 
 import unittest
 import httpretty
+import requests
 from mock import MagicMock
 
 from swiftest.account import Account
-from swiftest.exception import AuthenticationError
 
 class TestAccount(unittest.TestCase):
 
@@ -32,7 +32,7 @@ class TestAccount(unittest.TestCase):
         try:
             Account(self.client)
             self.fail('Did not fail on a rejected token.')
-        except AuthenticationError:
+        except requests.HTTPError:
             pass
 
     def tearDown(self):
