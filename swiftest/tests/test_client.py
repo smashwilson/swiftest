@@ -19,7 +19,7 @@ class TestClient(unittest.TestCase):
 
         httpretty.register_uri(httpretty.GET, 'http://auth.endpoint.com/v1/', status=204,
             x_auth_token='12345abcdef',
-            x_storage_url='http://storage.endpoint.com/v1/')
+            x_storage_url='http://storage.endpoint.com/v1/account')
 
         client = Client(endpoint='http://auth.endpoint.com/v1/',
             username='me', auth_key='swordfish')
@@ -29,7 +29,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(auth_req_headers['X-Auth-Key'], 'swordfish')
 
         self.assertEqual(client.auth_token, '12345abcdef')
-        self.assertEqual(client.storage_url, 'http://storage.endpoint.com/v1/')
+        self.assertEqual(client.storage_url, 'http://storage.endpoint.com/v1/account')
 
     def test_authentication_failure(self):
         """
