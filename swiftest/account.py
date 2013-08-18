@@ -3,11 +3,8 @@ import requests
 
 from .metadata import Metadata
 from .exception import ProtocolError
+from .compat import to_long
 
-import sys
-if sys.version > '3':
-    # int is long in Python 3 (long doesn't exist)
-    long = int
 
 class Account:
     """
@@ -23,8 +20,8 @@ class Account:
 
         try:
             # Extract metadata from the response.
-            self.container_count = long(meta_response.headers['X-Account-Container-Count'])
-            self.bytes_used = long(meta_response.headers['X-Account-Bytes-Used'])
+            self.container_count = to_long(meta_response.headers['X-Account-Container-Count'])
+            self.bytes_used = to_long(meta_response.headers['X-Account-Bytes-Used'])
         except ValueError:
             raise ProtocolError("Non-integer received in HEAD response.")
 

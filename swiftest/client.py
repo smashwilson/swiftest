@@ -55,6 +55,7 @@ class Client:
         return r
 
     def __repr__(self):
-        return "<Client(endpoint={},username={},auth_key={})>".format(self.endpoint,
-                                           self.username,
-                                           "...")
+        cli_str = "<Client(endpoint='{}',username='{}',auth_key={})>"
+        return cli_str.format(self.endpoint,
+                              self.username,
+                              "...")
