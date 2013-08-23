@@ -16,4 +16,8 @@ class ProtocolError(SwiftestError):
     This is raised on many 500 conditions, for example, or cases where expected
     headers are missing from HTTP responses.
     """
-    pass
+
+class AlreadyExistsError(SwiftestError):
+    """
+    An attempt is made to create an object or a container that already exists.
+    """
