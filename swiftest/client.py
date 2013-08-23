@@ -2,6 +2,7 @@ import requests
 
 from .exception import ProtocolError
 from .account import Account
+from .container import Container
 
 class Client:
     """
@@ -37,6 +38,22 @@ class Client:
         """
 
         return Account(self)
+
+    def container(self, name):
+        """
+        Access a Container within this account by name.
+
+        If no container with this name exists, a NullContainer will be
+        returned instead.
+        """
+
+        try:
+            return Container(self, name)
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return NullContainer(self, name)
+            else:
+                raise
 
     def container_names(self):
         """
