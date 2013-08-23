@@ -1,4 +1,5 @@
 import re
+import requests
 
 class Metadata(dict):
     """
@@ -7,17 +8,25 @@ class Metadata(dict):
     save() must be called to commit any changes.
     """
 
-    def __init__(self, parent, existing):
+    def __init__(self, parent, prefix, existing):
         dict.__init__(self, existing)
         self.parent = parent
+        self.prefix = prefix
         self.updates = set()
         self.deletions = set()
 
     def save(self):
         """
-        Invoke the _commit_metadata() callback on the parent object.
+        Create, update or delete metadata in the parent object based on the changes
+        made to this dictionary.
         """
-        self.parent._commit_metadata(self)
+
+        h = {}
+        for update in self.updates:
+            h["X-{0}-Meta-{1}".format(self.prefix, update)] = self[update]
+        for deletion in self.deletions:
+            h["X-{0}-Meta-{1}".format(self.prefix, deletion)] = ''
+        self.parent.client._call(requests.post, '', headers=h)
 
     def __setitem__(self, key, value):
         """
@@ -55,4 +64,4 @@ class Metadata(dict):
             if match:
                 existing[match.group(1).lower()] = value
 
-        return cls(parent, existing)
+        return cls(parent, prefix, existing)

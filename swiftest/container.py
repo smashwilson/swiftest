@@ -1,4 +1,3 @@
-import re
 import requests
 
 from .metadata import Metadata
@@ -29,15 +28,3 @@ class Container:
 
     def exists(self):
         return True
-
-    def _commit_metadata(self, metadata):
-        """
-        Create, update or delete container metadata based on the changes made to
-        the metadata dictionary.
-        """
-        h = {}
-        for update in metadata.updates:
-            h["X-Container-Meta-" + update] = metadata[update]
-        for deletion in metadata.deletions:
-            h["X-Container-Meta-" + deletion] = ''
-        self.client._call(requests.post, '', headers=h)

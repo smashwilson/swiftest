@@ -1,4 +1,3 @@
-import re
 import requests
 
 from .metadata import Metadata
@@ -26,18 +25,6 @@ class Account:
             raise ProtocolError("Non-integer received in HEAD response.")
 
         self.metadata = Metadata.from_response(self, meta_response, 'Account')
-
-    def _commit_metadata(self, metadata):
-        """
-        Create, update or delete account metadata based on the changes made to
-        the metadata dictionary.
-        """
-        h = {}
-        for update in metadata.updates:
-            h["X-Account-Meta-" + update] = metadata[update]
-        for deletion in metadata.deletions:
-            h["X-Account-Meta-" + deletion] = ''
-        self.client._call(requests.post, '', headers=h)
 
     def __repr__(self):
         return "<Account(" + repr(self.client) + ")>"
