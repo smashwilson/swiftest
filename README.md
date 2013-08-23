@@ -49,6 +49,13 @@ if existing.exists():
 newone = cli.container('newone').create_if_necessary()
 ```
 
+Existing containers can be acquired from `Client`'s `containers()` generator method.
+
+```python
+for c in cli.containers():
+    print("Got existing container: ", c.name)
+```
+
 ## References
 
  * [OpenSwift v1.0 API](http://docs.openstack.org/api/openstack-object-storage/1.0/content/)

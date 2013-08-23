@@ -57,10 +57,18 @@ class Client:
 
     def container_names(self):
         """
-        List the names of Containrs available in this account.
+        List the names of Containers available in this account.
         """
 
         return self._call(requests.get, '').text.split("\n")
+
+    def containers(self):
+        """
+        Generate each existing Container.
+        """
+
+        for name in self.container_names():
+            yield self.container(name)
 
     def _call(self, method, path, **kwargs):
         """

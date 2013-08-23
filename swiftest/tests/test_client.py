@@ -66,6 +66,25 @@ class TestClient(unittest.TestCase):
         client = self.create_client()
         self.assertEqual(['foo', 'bar', 'baz'], client.container_names())
 
+    def test_container_generator(self):
+        """
+        The containers() method generates Container objects.
+        """
+
+        container_list = "foo\nbar\nbaz"
+        httpretty.register_uri(GET, 'http://storage.endpoint.com/v1/account', status=200,
+            body=container_list)
+        httpretty.register_uri(HEAD, 'http://storage.endpoint.com/v1/account/foo', status=204,
+            x_container_object_count=0, x_container_bytes_used=0)
+        httpretty.register_uri(HEAD, 'http://storage.endpoint.com/v1/account/bar', status=204,
+            x_container_object_count=0, x_container_bytes_used=0)
+        httpretty.register_uri(HEAD, 'http://storage.endpoint.com/v1/account/baz', status=204,
+            x_container_object_count=0, x_container_bytes_used=0)
+
+        client = self.create_client()
+        names = [cont.name for cont in client.containers()]
+        self.assertEqual(['foo', 'bar', 'baz'], names)
+
     def test_get_container_by_name(self):
         """
         Get a Container within this account by its name.
