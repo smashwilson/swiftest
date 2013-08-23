@@ -38,6 +38,13 @@ class Client:
 
         return Account(self)
 
+    def container_names(self):
+        """
+        List the names of Containrs available in this account.
+        """
+
+        return self._call(requests.get, '').text.split("\n")
+
     def _call(self, method, path, **kwargs):
         """
         Perform an HTTP request against the storage endpoint.
