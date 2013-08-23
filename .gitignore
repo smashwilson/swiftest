@@ -2,3 +2,6 @@
 swiftest.egg-info/
 build/
 dist/
+
+# Local test script, ignored because it has my Rackspace API key in it.
+demo.py
