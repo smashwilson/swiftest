@@ -35,6 +35,9 @@ class Container:
     def create_if_necessary(self):
         return self
 
+    def __repr__(self):
+        return "<Container(name={})>".format(self.name)
+
 class NullContainer:
     """
     A container that doesn't exist (yet).
@@ -61,3 +64,6 @@ class NullContainer:
 
     def create_if_necessary(self):
         return create()
+
+    def __repr__(self):
+        return "<NullContainer(name={})>".format(self.name)

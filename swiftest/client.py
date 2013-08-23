@@ -2,7 +2,7 @@ import requests
 
 from .exception import ProtocolError
 from .account import Account
-from .container import Container
+from .container import Container, NullContainer
 
 class Client:
     """
@@ -60,7 +60,8 @@ class Client:
         List the names of Containers available in this account.
         """
 
-        return self._call(requests.get, '').text.split("\n")
+        names = self._call(requests.get, '').text.split("\n")
+        return [name for name in names if name.strip()]
 
     def containers(self):
         """
