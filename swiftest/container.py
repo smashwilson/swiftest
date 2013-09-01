@@ -35,6 +35,9 @@ class Container:
     def create_if_necessary(self):
         return self
 
+    def delete(self):
+        self.client._call(requests.delete, '/' + self.name)
+
     def __repr__(self):
         return "<Container(name={})>".format(self.name)
 

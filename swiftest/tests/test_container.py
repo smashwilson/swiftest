@@ -5,7 +5,7 @@ Unit tests for the Container and NullContainer classes.
 import unittest
 import httpretty
 
-from httpretty import GET, PUT, POST, HEAD
+from httpretty import GET, PUT, POST, HEAD, DELETE
 
 from swiftest.container import Container, NullContainer
 from swiftest.client import Client
@@ -81,6 +81,11 @@ class TestContainer(unittest.TestCase):
         c = Container(self.client, 'contname')
 
         self.assertEqual(c, c.create_if_necessary())
+
+    def test_delete_container(self):
+        httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
+        c = Container(self.client, 'contname')
+        c.delete()
 
     def tearDown(self):
         httpretty.disable()
