@@ -1,3 +1,5 @@
+import shutil
+
 import requests
 
 from .metadata import Metadata
@@ -35,7 +37,7 @@ class Container:
     def create_if_necessary(self):
         return self
 
-    def download_string(self, name, encoding = None):
+    def download_string(self, name, encoding=None):
         """
         Download the contents of a named object to a String.
 
@@ -55,15 +57,18 @@ class Container:
 
         return self._object_resp(name).content
 
-    def download_file(self, name, io, buffer_size = None):
+    def download_file(self, name, io, buffer_size=None):
         """
         Download the contents of a named object to an open file-like destination.
 
         Provide a custom buffer size to override the default copy buffer provided by shutils. Be sure
         that "io" is opened in binary mode if this object contains binary data, to avoid newline
         translation or other encoding hiccups.
+
+        Opening and closing "io" is the caller's responsibility.
         """
-        pass
+        resp = self._object_resp(name, stream=True)
+        shutil.copyfileobj(resp.raw, io, buffer_size)
 
     def delete(self):
         self.client._call(requests.delete, '/' + self.name)

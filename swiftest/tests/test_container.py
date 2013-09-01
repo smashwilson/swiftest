@@ -2,6 +2,8 @@
 Unit tests for the Container and NullContainer classes.
 """
 
+from StringIO import StringIO
+
 import unittest
 import httpretty
 
@@ -100,6 +102,16 @@ class TestContainer(unittest.TestCase):
 
         string = c.download_string('objectname', encoding='utf-8')
         self.assertEqual(string, u'object content')
+
+    def test_download_file(self):
+        httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
+            status=200, body='object content')
+        c = Container(self.client, 'contname')
+
+        dest = StringIO()
+        c.download_file('objectname', dest)
+        self.assertEqual(dest.getvalue(), b'object content')
+        dest.close()
 
     def test_delete_container(self):
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
