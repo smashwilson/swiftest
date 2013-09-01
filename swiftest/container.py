@@ -92,6 +92,14 @@ class Container:
         self._internal().delete()
         self.internal = NullContainer(self.client, self.name)
 
+    def delete_if_necessary(self):
+        """
+        Delete this container if it exists.
+        """
+
+        if self._internal().delete_if_necessary():
+            self.internal = NullContainer(self.client, self.name)
+
     def __getattr__(self, attr_name):
         """
         Resolve this container's internal representation before permitting attribute access.
@@ -100,7 +108,7 @@ class Container:
         if attr_name in Container._DELEGATED_ATTRS:
             return getattr(self._internal(), attr_name)
         else:
-            return super.__getattr__(attr_name)
+            raise AttributeError("Attribute {0} does not exist in a Container.".format(attr_name))
 
     def __repr__(self):
         if self.internal:
@@ -186,6 +194,10 @@ class ExistingContainer:
     def delete(self):
         self.client._call(requests.delete, '/' + self.name)
 
+    def delete_if_necessary(self):
+        self.delete()
+        return True
+
     def __repr__(self):
         return "<ExistingContainer(name={})>".format(self.name)
 
@@ -220,6 +232,9 @@ class NullContainer:
 
     def delete(self):
         raise DoesNotExistError.container(self.name)
+
+    def delete_if_necessary(self):
+        return False
 
     def __getattr__(self, attr):
         if attr in Container._DELEGATED_ATTRS:

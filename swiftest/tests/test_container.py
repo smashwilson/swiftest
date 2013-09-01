@@ -177,6 +177,27 @@ class TestContainer(unittest.TestCase):
             # Expected
             pass
 
+    def test_delete_existing_if_necessary(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
+            x_container_object_count=1234, x_container_bytes_used=102400)
+        httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
+
+        c = Container(self.client, 'contname')
+        self.assertTrue(c.exists())
+
+        c.delete_if_necessary()
+
+        self.assertFalse(c.exists())
+
+    def test_delete_null_container_if_necessary(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
+
+        c = Container(self.client, 'contname')
+        self.assertFalse(c.exists())
+
+        c.delete_if_necessary()
+
+        self.assertFalse(c.exists())
 
     def tearDown(self):
         httpretty.disable()
