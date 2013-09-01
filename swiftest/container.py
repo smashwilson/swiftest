@@ -198,6 +198,9 @@ class ExistingContainer:
         self.delete()
         return True
 
+    def _object_resp(self, name, **kwargs):
+        return self._internal()._object_resp(self, name, **kwargs)
+
     def __repr__(self):
         return "<ExistingContainer(name={})>".format(self.name)
 
@@ -236,11 +239,14 @@ class NullContainer:
     def delete_if_necessary(self):
         return False
 
+    def _object_resp(self, name, **kwargs):
+        raise DoesNotExistError.container(self.name)
+
     def __getattr__(self, attr):
         if attr in Container._DELEGATED_ATTRS:
             raise DoesNotExistError.container(self.name)
         else:
-            super.__getattr__(attr)
+            raise AttributeError("Attribute {0} does not exist in a Container.".format(attr_name))
 
     def __repr__(self):
         return "<NullContainer(name={})>".format(self.name)
