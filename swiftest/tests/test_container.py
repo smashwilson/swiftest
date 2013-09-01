@@ -64,6 +64,9 @@ class TestContainer(unittest.TestCase):
         c = NullContainer(self.client, 'notyet')
         created = c.create()
 
+        self.assertEqual('notyet', created.name)
+        self.assertEqual(self.client, created.client)
+
     def test_create_existing(self):
         httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
             x_container_object_count=1234, x_container_bytes_used=102400)
@@ -81,6 +84,14 @@ class TestContainer(unittest.TestCase):
         c = Container(self.client, 'contname')
 
         self.assertEqual(c, c.create_if_necessary())
+
+    def test_fetch_object(self):
+        httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
+            status=200, body='object content')
+        c = Container(self.client, 'contname')
+
+        string = c.object('objectname')
+        self.assertEqual(string, b'object content')
 
     def test_delete_container(self):
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)

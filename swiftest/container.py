@@ -35,6 +35,10 @@ class Container:
     def create_if_necessary(self):
         return self
 
+    def object(self, name):
+        resp = self.client._call(requests.get, '/{0}/{1}'.format(self.name, name))
+        return resp.content
+
     def delete(self):
         self.client._call(requests.delete, '/' + self.name)
 
