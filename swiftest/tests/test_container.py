@@ -2,7 +2,7 @@
 Unit tests for the Container and NullContainer classes.
 """
 
-from StringIO import StringIO
+from io import BytesIO
 
 import unittest
 import httpretty
@@ -108,7 +108,7 @@ class TestContainer(unittest.TestCase):
             status=200, body='object content')
         c = Container(self.client, 'contname')
 
-        dest = StringIO()
+        dest = BytesIO()
         c.download_file('objectname', dest)
         self.assertEqual(dest.getvalue(), b'object content')
         dest.close()
