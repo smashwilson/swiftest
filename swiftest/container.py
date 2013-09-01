@@ -35,7 +35,13 @@ class Container:
     def create_if_necessary(self):
         return self
 
-    def object(self, name):
+    def download_string(self, name, encoding = None):
+        resp = self.client._call(requests.get, '/{0}/{1}'.format(self.name, name))
+        if encoding:
+            resp.encoding = encoding
+        return resp.text
+
+    def download_binary(self, name):
         resp = self.client._call(requests.get, '/{0}/{1}'.format(self.name, name))
         return resp.content
 
