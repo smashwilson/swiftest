@@ -242,8 +242,8 @@ class NullContainer:
     def _object_resp(self, name, **kwargs):
         raise DoesNotExistError.container(self.name)
 
-    def __getattr__(self, attr):
-        if attr in Container._DELEGATED_ATTRS:
+    def __getattr__(self, attr_name):
+        if attr_name in Container._DELEGATED_ATTRS:
             raise DoesNotExistError.container(self.name)
         else:
             raise AttributeError("Attribute {0} does not exist in a Container.".format(attr_name))
