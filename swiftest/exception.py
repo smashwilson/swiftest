@@ -21,3 +21,8 @@ class AlreadyExistsError(SwiftestError):
     """
     An attempt is made to create an object or a container that already exists.
     """
+
+class DoesNotExistError(SwiftestError):
+    """
+    An attempt is made to manipulate an object or a container that does not exist.
+    """

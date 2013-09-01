@@ -11,7 +11,7 @@ from httpretty import GET, PUT, POST, HEAD, DELETE
 
 from swiftest.container import Container, NullContainer
 from swiftest.client import Client
-from swiftest.exception import AlreadyExistsError
+from swiftest.exception import AlreadyExistsError, DoesNotExistError
 from . import util
 
 class TestContainer(unittest.TestCase):
@@ -54,20 +54,44 @@ class TestContainer(unittest.TestCase):
         hs = httpretty.last_request().headers
         self.assertEqual('', hs['X-Container-Meta-Meta1'])
 
+
     def test_null_container(self):
-        c = NullContainer(self.client, 'nothere')
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
+
+        c = Container(self.client, 'contname')
         self.assertFalse(c.exists())
 
+    def test_null_container_metadata(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
+
+        c = Container(self.client, 'contname')
+        try:
+            c.metadata
+            self.fail("Did not raise error accessing the metadata for a nonexistent container")
+        except DoesNotExistError:
+            # Expected
+            pass
+
     def test_create_new(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=404)
+
+        c = Container(self.client, 'notyet')
+
+        # Force the NullContainer to resolve.
+        self.assertFalse(c.exists())
+
         httpretty.register_uri(PUT, util.STORAGE_URL + '/notyet', status=201)
         httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=204,
             x_container_object_count=0, x_container_bytes_used=0)
 
-        c = NullContainer(self.client, 'notyet')
         created = c.create()
 
+        self.assertTrue(created.exists())
+        self.assertEqual(0, created.object_count)
+        self.assertEqual(0, created.bytes_used)
         self.assertEqual('notyet', created.name)
         self.assertEqual(self.client, created.client)
+        self.assertIs(created, c)
 
     def test_create_existing(self):
         httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
@@ -86,6 +110,23 @@ class TestContainer(unittest.TestCase):
         c = Container(self.client, 'contname')
 
         self.assertEqual(c, c.create_if_necessary())
+
+    def test_create_if_necessary(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=404)
+
+        c = Container(self.client, 'notyet')
+
+        # Force the NullContainer to resolve.
+        self.assertFalse(c.exists())
+
+        httpretty.register_uri(PUT, util.STORAGE_URL + '/notyet', status=201)
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=204,
+            x_container_object_count=0, x_container_bytes_used=0)
+
+        created = c.create_if_necessary()
+
+        self.assertTrue(created.exists())
+        self.assertIs(created, c)
 
     def test_download_binary(self):
         httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
