@@ -77,11 +77,20 @@ class Container:
 
         Opening and closing "io" is the caller's responsibility.
         """
+
         resp = self._object_resp(name, stream=True)
         shutil.copyfileobj(resp.raw, io, buffer_size)
 
     def delete(self):
-        self.client._call(requests.delete, '/' + self.name)
+        """
+        Delete this container.
+
+        Raises a DoesNotExistError if this container doesn't exist to be
+        deleted. Use delete_if_necessary() for a more lenient deletion.
+        """
+
+        self._internal().delete()
+        self.internal = NullContainer(self.client, self.name)
 
     def __getattr__(self, attr_name):
         """
@@ -170,9 +179,12 @@ class ExistingContainer:
 
     def create_if_necessary(self):
         """
-        No-op.
+        No-op for existing containers.
         """
         pass
+
+    def delete(self):
+        self.client._call(requests.delete, '/' + self.name)
 
     def __repr__(self):
         return "<ExistingContainer(name={})>".format(self.name)
@@ -206,9 +218,12 @@ class NullContainer:
     def create_if_necessary(self):
         self.create()
 
+    def delete(self):
+        raise DoesNotExistError.container(self.name)
+
     def __getattr__(self, attr):
         if attr in Container._DELEGATED_ATTRS:
-            raise DoesNotExistError("Container {} does not exist.".format(self.name))
+            raise DoesNotExistError.container(self.name)
         else:
             super.__getattr__(attr)
 

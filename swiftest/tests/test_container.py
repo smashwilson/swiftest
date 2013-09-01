@@ -154,10 +154,29 @@ class TestContainer(unittest.TestCase):
         self.assertEqual(dest.getvalue(), b'object content')
         dest.close()
 
-    def test_delete_container(self):
+    def test_delete_existing_container(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
+            x_container_object_count=1234, x_container_bytes_used=102400)
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
+
         c = Container(self.client, 'contname')
         c.delete()
+
+        self.assertFalse(c.exists())
+
+    def test_delete_null_container(self):
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
+        httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=404)
+
+        c = Container(self.client, 'contname')
+
+        try:
+            c.delete()
+            self.fail("Did not raise exception attempting to delete missing container")
+        except DoesNotExistError:
+            # Expected
+            pass
+
 
     def tearDown(self):
         httpretty.disable()

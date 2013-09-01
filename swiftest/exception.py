@@ -19,10 +19,18 @@ class ProtocolError(SwiftestError):
 
 class AlreadyExistsError(SwiftestError):
     """
-    An attempt is made to create an object or a container that already exists.
+    An attempt is made to create or delete an object or a container that already exists.
     """
 
 class DoesNotExistError(SwiftestError):
     """
     An attempt is made to manipulate an object or a container that does not exist.
     """
+
+    @classmethod
+    def _message(cls, tp, name):
+        return cls("{0} {1} does not exist.".format(tp, name))
+
+    @classmethod
+    def container(cls, container_name):
+        return cls._message("Container", container_name)
