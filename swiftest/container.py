@@ -36,20 +36,43 @@ class Container:
         return self
 
     def download_string(self, name, encoding = None):
-        resp = self.client._call(requests.get, '/{0}/{1}'.format(self.name, name))
+        """
+        Download the contents of a named object to a String.
+
+        By default, the String's encoding will be inferred from header information by the
+        underlying requests call, overridden by an explicit encoding if one is provided.
+        """
+
+        resp = self._object_resp(name)
         if encoding:
             resp.encoding = encoding
         return resp.text
 
     def download_binary(self, name):
-        resp = self.client._call(requests.get, '/{0}/{1}'.format(self.name, name))
-        return resp.content
+        """
+        Download the contents of a named object as uninterpreted binary.
+        """
+
+        return self._object_resp(name).content
+
+    def download_file(self, name, io, buffer_size = None):
+        """
+        Download the contents of a named object to an open file-like destination.
+
+        Provide a custom buffer size to override the default copy buffer provided by shutils. Be sure
+        that "io" is opened in binary mode if this object contains binary data, to avoid newline
+        translation or other encoding hiccups.
+        """
+        pass
 
     def delete(self):
         self.client._call(requests.delete, '/' + self.name)
 
     def __repr__(self):
         return "<Container(name={})>".format(self.name)
+
+    def _object_resp(self, name, **kwargs):
+        return self.client._call(requests.get, '/{0}/{1}'.format(self.name, name), **kwargs)
 
 class NullContainer:
     """
