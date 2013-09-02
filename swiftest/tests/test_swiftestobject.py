@@ -52,11 +52,11 @@ class SwiftestObjectTest(unittest.TestCase):
 
         o = SwiftestObject(self.client, 'contname', 'newobject')
 
-        o.upload_string(u'something')
+        o.upload_string(b'something')
 
         req = httpretty.last_request()
         self.assertEqual('437b930db84b8079c2dd804a71936b5f', req.headers['ETag'])
-        self.assertEqual(u'something', req.body)
+        self.assertEqual(b'something', req.body)
 
     def tearDown(self):
         httpretty.disable()
