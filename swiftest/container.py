@@ -1,5 +1,3 @@
-import shutil
-
 import requests
 
 from .metadata import Metadata
@@ -49,39 +47,16 @@ class Container:
         self._internal_create()
         return self
 
-    def download_string(self, name, encoding=None):
+    def object(self, name):
         """
-        Download the contents of a named object to a String.
+        Access an object stored within this container.
 
-        By default, the String's encoding will be inferred from header information by the
-        underlying requests call, overridden by an explicit encoding if one is provided.
-        """
-
-        resp = self._object_resp(name)
-        if encoding:
-            resp.encoding = encoding
-        return resp.text
-
-    def download_binary(self, name):
-        """
-        Download the contents of a named object as uninterpreted binary.
+        The named object does not need to exist yet; an "upload_" method can
+        be called on the returned SwiftestObject to store new data within this
+        container.
         """
 
-        return self._object_resp(name).content
-
-    def download_file(self, name, io, buffer_size=None):
-        """
-        Download the contents of a named object to an open file-like destination.
-
-        Provide a custom buffer size to override the default copy buffer provided by shutils. Be sure
-        that "io" is opened in binary mode if this object contains binary data, to avoid newline
-        translation or other encoding hiccups.
-
-        Opening and closing "io" is the caller's responsibility.
-        """
-
-        resp = self._object_resp(name, stream=True)
-        shutil.copyfileobj(resp.raw, io, buffer_size)
+        return SwiftestObject(self.client, self.name, name)
 
     def delete(self):
         """
@@ -154,6 +129,3 @@ class Container:
         """
 
         return self.client._call(requests.put, '/' + self.name)
-
-    def _object_resp(self, name, **kwargs):
-        return self.client._call(requests.get, '/{0}/{1}'.format(self.name, name), **kwargs)

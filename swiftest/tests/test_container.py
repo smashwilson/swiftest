@@ -107,32 +107,6 @@ class ContainerTest(unittest.TestCase):
         created = c.create_if_necessary()
         self.assertIs(created, c)
 
-    def test_download_binary(self):
-        httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
-            status=200, body='object content')
-        c = Container(self.client, 'contname')
-
-        binary = c.download_binary('objectname')
-        self.assertEqual(binary, b'object content')
-
-    def test_download_string(self):
-        httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
-            status=200, body='object content')
-        c = Container(self.client, 'contname')
-
-        string = c.download_string('objectname', encoding='utf-8')
-        self.assertEqual(string, u'object content')
-
-    def test_download_file(self):
-        httpretty.register_uri(GET, util.STORAGE_URL + '/contname/objectname',
-            status=200, body='object content')
-        c = Container(self.client, 'contname')
-
-        dest = BytesIO()
-        c.download_file('objectname', dest)
-        self.assertEqual(dest.getvalue(), b'object content')
-        dest.close()
-
     def test_delete_existing_container(self):
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
 
