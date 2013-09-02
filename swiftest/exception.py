@@ -11,7 +11,7 @@ class SwiftestError(Exception):
 
 class ProtocolError(SwiftestError):
     """
-    An unexpected state was encountered in the OpenSwift protocol.
+    An unexpected state was encountered in the OpenStack protocol.
 
     This is raised on many 500 conditions, for example, or cases where expected
     headers are missing from HTTP responses.

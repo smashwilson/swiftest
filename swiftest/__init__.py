@@ -1,5 +1,5 @@
 """
-Pythonic client for OpenSwift.
+Pythonic client for OpenStack Object Storage.
 
 >>> from client import Client
 >>> cli = Client(endpoint='https://identity.api.rackspacecloud.com/v1.0/', username=USER_NAME, auth_key=AUTH_KEY)

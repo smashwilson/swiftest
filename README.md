@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/smashwilson/swiftest.png)](https://travis-ci.org/smashwilson/swiftest)
 
-*Swiftest* is a Pythonic API for interacting with OpenSwift object storage providers, built on
+*Swiftest* is a Pythonic API for interacting with OpenStack Swift object storage providers, built on
 [requests](http://docs.python-requests.org/en/latest/).
 
 ## Installation
@@ -68,4 +68,4 @@ Got existing container: baz
 
 ## References
 
- * [OpenSwift v1.0 API](http://docs.openstack.org/api/openstack-object-storage/1.0/content/)
+ * [OpenStack Object Storage v1.0 API](http://docs.openstack.org/api/openstack-object-storage/1.0/content/)

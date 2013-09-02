@@ -12,7 +12,7 @@ with open('requirements.txt') as f:
 setup(
     name='swiftest',
     version=swiftest.VERSION,
-    description='Pythonic client for OpenSwift',
+    description='Pythonic client for OpenStack Object Storage',
     author='Ash Wilson',
     author_email='smashwilson@gmail.com',
     url='https://github.com/smashwilson/swiftest',
