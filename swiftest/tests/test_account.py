@@ -13,7 +13,7 @@ from swiftest.account import Account
 from . import util
 from .util import create_client
 
-class TestAccount(unittest.TestCase):
+class AccountTest(unittest.TestCase):
 
     def setUp(self):
         httpretty.enable()

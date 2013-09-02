@@ -11,7 +11,7 @@ from swiftest.client import Client
 
 from . import util
 
-class TestClient(unittest.TestCase):
+class ClientTest(unittest.TestCase):
 
     def setUp(self):
         httpretty.enable()

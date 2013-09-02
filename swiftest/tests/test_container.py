@@ -1,5 +1,5 @@
 """
-Unit tests for the Container and NullContainer classes.
+Unit tests for the Container class.
 """
 
 from io import BytesIO
@@ -14,7 +14,7 @@ from swiftest.client import Client
 from swiftest.exception import AlreadyExistsError, DoesNotExistError
 from . import util
 
-class TestContainer(unittest.TestCase):
+class ContainerTest(unittest.TestCase):
 
     def setUp(self):
         httpretty.enable()
