@@ -1,5 +1,6 @@
 import requests
 
+from .swiftest_object import SwiftestObject
 from .metadata import Metadata
 from .exception import ProtocolError, AlreadyExistsError, DoesNotExistError
 from .compat import to_long

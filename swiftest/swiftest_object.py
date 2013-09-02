@@ -5,6 +5,8 @@ Download and upload individual OpenStack Swift objects.
 import requests
 import shutil
 
+from hashlib import md5
+
 class SwiftestObject:
     """
     A single object stored within a Container.
@@ -54,7 +56,27 @@ class SwiftestObject:
         resp = self._content_resp(stream=True)
         shutil.copyfileobj(resp.raw, io, buffer_size)
 
+    def upload_string(self, string):
+        """
+        Upload a String as the new content of this object.
+        """
+
+        # Compute the string's checksum.
+        checksum = md5(string).hexdigest()
+        self.client._call(requests.put, self._endpoint(), headers={'ETag': checksum}, data=string)
+
+    def upload_file(self, io):
+        """
+        Upload the contents of an open file.
+        """
+
+        self.client._call(requests.put, self._endpoint(), data=io)
+
+
     def _content_resp(self, **kwargs):
         return self.client._call(requests.get,
-            '/{0}/{1}'.format(self.container_name, self.name),
+            self._endpoint(),
             **kwargs)
+
+    def _endpoint(self):
+        return '/{0}/{1}'.format(self.container_name, self.name)

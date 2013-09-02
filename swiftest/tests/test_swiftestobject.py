@@ -46,5 +46,17 @@ class SwiftestObjectTest(unittest.TestCase):
         self.assertEqual(dest.getvalue(), b'object content')
         dest.close()
 
+    def test_upload_string(self):
+        httpretty.register_uri(PUT, util.STORAGE_URL + '/contname/newobject',
+            status=201)
+
+        o = SwiftestObject(self.client, 'contname', 'newobject')
+
+        o.upload_string(u'something')
+
+        req = httpretty.last_request()
+        self.assertEqual('437b930db84b8079c2dd804a71936b5f', req.headers['ETag'])
+        self.assertEqual(u'something', req.body)
+
     def tearDown(self):
         httpretty.disable()
