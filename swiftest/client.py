@@ -2,7 +2,7 @@ import requests
 
 from .exception import ProtocolError
 from .account import Account
-from .container import Container, NullContainer
+from .container import Container
 
 class Client:
     """
@@ -71,7 +71,7 @@ class Client:
         for name in self.container_names():
             yield self.container(name)
 
-    def _call(self, method, path, **kwargs):
+    def _call(self, method, path, accept_status=[], **kwargs):
         """
         Perform an HTTP request against the storage endpoint.
 
@@ -84,7 +84,8 @@ class Client:
         else:
             extra['headers'] = {'X-Auth-Token': self.auth_token}
         r = method(self.storage_url + path, **extra)
-        r.raise_for_status()
+        if r.status_code not in accept_status:
+            r.raise_for_status()
         return r
 
     def __repr__(self):

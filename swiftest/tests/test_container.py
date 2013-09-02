@@ -9,7 +9,7 @@ import httpretty
 
 from httpretty import GET, PUT, POST, HEAD, DELETE
 
-from swiftest.container import Container, NullContainer
+from swiftest.container import Container
 from swiftest.client import Client
 from swiftest.exception import AlreadyExistsError, DoesNotExistError
 from . import util
@@ -77,25 +77,12 @@ class TestContainer(unittest.TestCase):
 
         c = Container(self.client, 'notyet')
 
-        # Force the NullContainer to resolve.
-        self.assertFalse(c.exists())
-
-        httpretty.register_uri(PUT, util.STORAGE_URL + '/notyet', status=201)
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=204,
-            x_container_object_count=0, x_container_bytes_used=0)
-
+        # Shouldn't raise.
         created = c.create()
-
-        self.assertTrue(created.exists())
-        self.assertEqual(0, created.object_count)
-        self.assertEqual(0, created.bytes_used)
-        self.assertEqual('notyet', created.name)
-        self.assertEqual(self.client, created.client)
         self.assertIs(created, c)
 
     def test_create_existing(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
-            x_container_object_count=1234, x_container_bytes_used=102400)
+        httpretty.register_uri(PUT, util.STORAGE_URL + '/contname', status=202)
         c = Container(self.client, 'contname')
 
         try:
@@ -105,27 +92,19 @@ class TestContainer(unittest.TestCase):
             pass
 
     def test_create_if_necessary_noop(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
+        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=202,
             x_container_object_count=1234, x_container_bytes_used=102400)
         c = Container(self.client, 'contname')
 
-        self.assertEqual(c, c.create_if_necessary())
+        self.assertIs(c, c.create_if_necessary())
 
     def test_create_if_necessary(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=404)
-
         c = Container(self.client, 'notyet')
 
-        # Force the NullContainer to resolve.
-        self.assertFalse(c.exists())
-
         httpretty.register_uri(PUT, util.STORAGE_URL + '/notyet', status=201)
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/notyet', status=204,
-            x_container_object_count=0, x_container_bytes_used=0)
 
+        # Shouldn't raise
         created = c.create_if_necessary()
-
-        self.assertTrue(created.exists())
         self.assertIs(created, c)
 
     def test_download_binary(self):
@@ -155,17 +134,16 @@ class TestContainer(unittest.TestCase):
         dest.close()
 
     def test_delete_existing_container(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
-            x_container_object_count=1234, x_container_bytes_used=102400)
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
 
         c = Container(self.client, 'contname')
+
+        # Shouldn't raise.
         c.delete()
 
-        self.assertFalse(c.exists())
+        self.assertEqual('DELETE', httpretty.last_request().method)
 
     def test_delete_null_container(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=404)
 
         c = Container(self.client, 'contname')
@@ -178,26 +156,22 @@ class TestContainer(unittest.TestCase):
             pass
 
     def test_delete_existing_if_necessary(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=204,
-            x_container_object_count=1234, x_container_bytes_used=102400)
         httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=204)
 
         c = Container(self.client, 'contname')
-        self.assertTrue(c.exists())
 
+        # Shouldn't raise.
         c.delete_if_necessary()
 
-        self.assertFalse(c.exists())
+        self.assertEqual('DELETE', httpretty.last_request().method)
 
     def test_delete_null_container_if_necessary(self):
-        httpretty.register_uri(HEAD, util.STORAGE_URL + '/contname', status=404)
+        httpretty.register_uri(DELETE, util.STORAGE_URL + '/contname', status=404)
 
         c = Container(self.client, 'contname')
-        self.assertFalse(c.exists())
 
+        # Shouldn't raise.
         c.delete_if_necessary()
-
-        self.assertFalse(c.exists())
 
     def tearDown(self):
         httpretty.disable()

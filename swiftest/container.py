@@ -8,21 +8,23 @@ from .compat import to_long
 
 class Container:
 
-    _DELEGATED_ATTRS = ('metadata', 'object_count', 'bytes_used')
+    _METADATA_ATTRS = ('metadata', 'object_count', 'bytes_used')
 
     def __init__(self, client, name):
         """
-        Acquire basic Container metadata.
-
-        An HTTPNotFoundError will be raised if the container does not exist.
+        Construct a Container with a provided name.
         """
 
         self.name = name
         self.client = client
-        self.internal = None
+        self._metadata_fetched = False
 
     def exists(self):
-        return self._internal().exists()
+        try:
+            self._fetch_metadata()
+            return True
+        except DoesNotExistError:
+            return False
 
     def create(self):
         """
@@ -32,8 +34,9 @@ class Container:
         exists. See create_if_necessary() for a more lenient call.
         """
 
-        self._internal().create()
-        self._resolve()
+        r = self._internal_create()
+        if r.status_code == 202:
+            raise AlreadyExistsError("The container {} already exists.".format(self.name))
         return self
 
     def create_if_necessary(self):
@@ -43,8 +46,7 @@ class Container:
         If the container already exists, this method will be a no-op.
         """
 
-        self._internal().create_if_necessary()
-        self._resolve()
+        self._internal_create()
         return self
 
     def download_string(self, name, encoding=None):
@@ -89,164 +91,69 @@ class Container:
         deleted. Use delete_if_necessary() for a more lenient deletion.
         """
 
-        self._internal().delete()
-        self.internal = NullContainer(self.client, self.name)
+        r = self._internal_delete()
+        if r.status_code == 404:
+            raise DoesNotExistError.container(self.name)
+        return self
 
     def delete_if_necessary(self):
         """
         Delete this container if it exists.
         """
 
-        if self._internal().delete_if_necessary():
-            self.internal = NullContainer(self.client, self.name)
+        self._internal_delete()
+        return self
 
     def __getattr__(self, attr_name):
         """
-        Resolve this container's internal representation before permitting attribute access.
+        Resolve this container's metadata properties if necessary.
         """
 
-        if attr_name in Container._DELEGATED_ATTRS:
-            return getattr(self._internal(), attr_name)
+        if attr_name in Container._METADATA_ATTRS:
+            self._fetch_metadata()
+            return getattr(self, attr_name)
         else:
             raise AttributeError("Attribute {0} does not exist in a Container.".format(attr_name))
 
     def __repr__(self):
-        if self.internal:
-            exists = self.internal.exists()
-        else:
-            exists = '?'
-        return "<Container(name={}, exists={})>".format(self.name, exists)
+        return "<Container(name={})>".format(self.name)
 
-    def _internal(self):
+    def _fetch_metadata(self):
         """
-        Lazily construct the currently appropriate internal reprentation.
+        Fetch and populate this container's metadata attributes.
+
+        Translate a 404 into a DoesNotExistError.
         """
 
-        if self.internal:
-            return self.internal
-        else:
-            return self._resolve()
+        def long_header(resp, header_name):
+            try:
+                return to_long(resp.headers[header_name])
+            except ValueError:
+                raise ProtocolError("Non-integer received in header {}.".format(header_name))
+            except KeyError:
+                raise ProtocolError("Missing expected header value {}.}".format(header_name))
 
-    def _resolve(self):
+        r = self.client._call(requests.head, '/' + self.name, accept_status=[404])
+        if r.status_code == 404:
+            raise DoesNotExistError.container(self.name)
+
+        self.metadata = Metadata.from_response(self, r, 'Container')
+        self.object_count = long_header(r, 'X-Container-Object-Count')
+        self.bytes_used = long_header(r, 'X-Container-Bytes-Used')
+
+    def _internal_delete(self):
         """
-        Force instantiation of our internal representation.
-
-        Populates "internal" with either an ExistingContainer or a NullContainer,
-        fetching container metadata in the process. Raises an HTTPError if an
-        unexpected HTTP error condition is encountered.
+        Internal deletion method. Use delete() or delete_if_necessary().
         """
 
-        try:
-            meta_response = self.client._call(requests.head, '/' + self.name)
+        return self.client._call(requests.delete, '/' + self.name, accept_status=[404])
 
-            # If no HTTPError was raised, the container exists.
-            self.internal = ExistingContainer(self.client, self.name, meta_response)
-        except requests.HTTPError as e:
-            if e.response.status_code == 404:
-                # If a 404 was encountered, the container does not exist.
-                self.internal = NullContainer(self.client, self.name)
-            else:
-                raise
+    def _internal_create(self):
+        """
+        Internal creation method. Use create() or create_if_necessary().
+        """
 
-        return self.internal
+        return self.client._call(requests.put, '/' + self.name)
 
     def _object_resp(self, name, **kwargs):
         return self.client._call(requests.get, '/{0}/{1}'.format(self.name, name), **kwargs)
-
-class ExistingContainer:
-    """
-    A Container that exists.
-
-    Clients should not interact with this class directly; use the more friendly Container wrapper
-    instead. This is an internal representation that may be swapped with a NullContainer as various
-    operations are performed.
-    """
-
-    def __init__(self, client, name, meta_response):
-        self.client = client
-        self.name = name
-
-        try:
-            self.object_count = to_long(meta_response.headers['X-Container-Object-Count'])
-            self.bytes_used = to_long(meta_response.headers['X-Container-Bytes-Used'])
-        except ValueError:
-            raise ProtocolError("Non-integer received in container HEAD request.")
-
-        self.metadata = Metadata.from_response(self, meta_response, 'Container')
-
-    def exists(self):
-        return True
-
-    def create(self):
-        """
-        It's an error to attempt to create a container that already exists.
-
-        Use create_if_necessary() instead to create containers lazily.
-        """
-        raise AlreadyExistsError("Container {0} already exists.".format(self.name))
-
-    def create_if_necessary(self):
-        """
-        No-op for existing containers.
-        """
-        pass
-
-    def delete(self):
-        self.client._call(requests.delete, '/' + self.name)
-
-    def delete_if_necessary(self):
-        self.delete()
-        return True
-
-    def _object_resp(self, name, **kwargs):
-        return self._internal()._object_resp(self, name, **kwargs)
-
-    def __repr__(self):
-        return "<ExistingContainer(name={})>".format(self.name)
-
-class NullContainer:
-    """
-    A container that doesn't exist (yet).
-
-    Clients should not interact with this class directly; use the more friendly Container wrapper
-    instead. This is an internal representation that may be swapped seamlessly with an ExistingContainer
-    as operations are performed.
-    """
-
-    def __init__(self, client, name):
-        self.client = client
-        self.name = name
-
-    def exists(self):
-        return False
-
-    def create(self):
-        """
-        Create a container with this name.
-
-        An HTTPError will be raised if the container already exists at this
-        point (by a race condition).
-        """
-
-        self.client._call(requests.put, '/' + self.name)
-
-    def create_if_necessary(self):
-        self.create()
-
-    def delete(self):
-        raise DoesNotExistError.container(self.name)
-
-    def delete_if_necessary(self):
-        return False
-
-    def _object_resp(self, name, **kwargs):
-        raise DoesNotExistError.container(self.name)
-
-    def __getattr__(self, attr_name):
-        if attr_name in Container._DELEGATED_ATTRS:
-            raise DoesNotExistError.container(self.name)
-        else:
-            raise AttributeError("Attribute {0} does not exist in a Container.".format(attr_name))
-
-    def __repr__(self):
-        return "<NullContainer(name={})>".format(self.name)
